@@ -8,7 +8,8 @@ export function isUppercaseId(key: string): boolean {
 export function assertUppercaseId(key: string): void {
   if (!isUppercaseId(key)) {
     throw new Error(
-      `[active-state] Invalid key "${key}". Use UPPERCASE_IDS (e.g. CART_ITEMS). Pass enforceKeys={false} on <ActiveState> (or init(..., { enforceKeys: false })) to disable.`,
+      `[active-state] Invalid key "${key}". Use UPPERCASE_IDS (e.g. CART_ITEMS). Pass any on <ActiveState> (or init(..., { any: true })) to allow any keys.`,
     );
   }
 }
+

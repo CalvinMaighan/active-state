@@ -131,9 +131,11 @@ describe("core", () => {
     expect(() => init({ count: 0 })).toThrow(/Invalid key "count"/);
   });
 
-  test("enforceKeys false allows any key", () => {
-    init({ count: 0 }, { enforceKeys: false });
+  test("any: true allows any key", () => {
+    init({ count: 0 }, { any: true });
     set("count", 1);
     expect(get<number>("count")).toBe(1);
   });
 });
+
+

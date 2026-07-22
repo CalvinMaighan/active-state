@@ -1,7 +1,7 @@
 {
   "name": "active-state",
   "version": "0.1.0",
-  "description": "Tiny keyed pub/sub client store with a React hook for Next.js",
+  "description": "Tiny keyed pub/sub client store with React and static HTML bindings",
   "type": "module",
   "license": "MIT",
   "author": "Calvin Maighan",
@@ -29,19 +29,46 @@
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
     },
+    "./dom": {
+      "types": "./dist/dom/index.d.ts",
+      "import": "./dist/dom/index.js"
+    },
+    "./eslint": {
+      "types": "./dist/eslint/index.d.ts",
+      "import": "./dist/eslint/index.js"
+    },
     "./package.json": "./package.json"
   },
+  "unpkg": "./dist/active-state.min.js",
+  "jsdelivr": "./dist/active-state.min.js",
   "scripts": {
     "build": "rm -rf dist && tsup",
     "test": "bun test",
+    "size": "bun run build && bun scripts/size.ts",
+    "size:brotli": "bun run build && bun scripts/size.ts --brotli",
+    "examples:html": "bun run build && bun examples/html/serve.ts",
+    "examples:htmx": "bun run build && bun examples/htmx/serve.ts",
+    "examples:react": "bun run build && cd examples/react && bun install && bun run dev",
+    "examples:astro": "bun run build && cd examples/astro && bun install && bun run dev",
+
     "prepublishOnly": "bun run build && bun test"
   },
   "peerDependencies": {
+    "eslint": ">=9",
     "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
     "@types/react": "^19.2.17",
+    "eslint": "^9.39.2",
     "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }

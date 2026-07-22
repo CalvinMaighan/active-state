@@ -13,8 +13,14 @@
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "paths": {
+      "active-state": ["./src/core/index.ts"],
+      "active-state/dom": ["./src/dom/index.ts"],
+      "active-state/react": ["./src/react/index.ts"]
+    }
   },
   "include": ["src", "tests", "tsup.config.ts"],
   "exclude": ["dist", "node_modules"]
 }
+

@@ -1,7 +1,12 @@
 import { getStateInstance, resetStateInstance } from "./get-state-instance";
 import { init } from "./init";
 import { assertUppercaseId } from "./key-format";
-import { getEnforceKeys, resetOptions } from "./options";
+import {
+  getEnforceKeys,
+  getServerSnapshot,
+  getSsr,
+  resetOptions,
+} from "./options";
 import { uuid } from "./uuid";
 
 export { createObservable } from "./create-observable";
@@ -12,50 +17,89 @@ export { getStateInstance } from "./get-state-instance";
 export { init } from "./init";
 export type { InitOptions } from "./init";
 export { isUppercaseId, assertUppercaseId } from "./key-format";
+export {
+  catalog,
+  clearRegistry,
+  key,
+  registeredState,
+  resolveKey,
+  type AnyKey,
+  type KeyPrimitive,
+  type KeySlice,
+} from "./key";
+export { getServerSnapshot, getSsr } from "./options";
+export {
+  isPersisted,
+  persistedIds,
+  readPersisted,
+} from "./persist";
 export { uuid } from "./uuid";
+
+import { clearRegistry, resolveKey, type AnyKey } from "./key";
+import {
+  isPersisted,
+  persistedIds,
+  readPersisted,
+  writePersisted,
+} from "./persist";
 
 function assertKey(key: string): void {
   if (getEnforceKeys()) assertUppercaseId(key);
 }
 
-export function get<T = unknown>(key: string): T | undefined {
-  assertKey(key);
-  const source = getStateInstance().getSource(key);
+export function get<T = unknown>(key: AnyKey): T | undefined {
+  const id = resolveKey(key);
+  assertKey(id);
+  const source = getStateInstance().getSource(id);
   return source?.getValue() as T | undefined;
 }
 
 export function set<T = unknown>(
-  key: string,
+  key: AnyKey,
   value: T | ((prev: T | undefined) => T),
 ): void {
-  assertKey(key);
+  const id = resolveKey(key);
+  assertKey(id);
   const bus = getStateInstance();
   // Avoid getSource here so unknown keys warn once inside update().
-  const prev = bus.keys().includes(key)
-    ? (bus.getSource(key)?.getValue() as T | undefined)
+  const prev = bus.keys().includes(id)
+    ? (bus.getSource(id)?.getValue() as T | undefined)
     : undefined;
   const next =
     typeof value === "function"
       ? (value as (p: T | undefined) => T)(prev)
       : value;
-  bus.update(key, next);
+  bus.update(id, next);
+  if (isPersisted(id)) writePersisted(id, next);
 }
 
 export function subscribe(
-  key: string,
+  key: AnyKey,
   listener: (value: unknown) => void,
 ): () => void {
-  assertKey(key);
-  const source = getStateInstance().getSource(key);
+  const id = resolveKey(key);
+  assertKey(id);
+  const source = getStateInstance().getSource(id);
   if (!source) return () => {};
 
-  const id = uuid();
+  const subId = uuid();
   source.subscribe({
-    id,
+    id: subId,
     next: listener,
     complete: () => {},
   });
-  return () => source.unsubscribe(id);
+  return () => source.unsubscribe(subId);
+}
+
+/**
+ * Re-read persisted keys from localStorage into the live store.
+ * Normally automatic; useful after login or manual storage edits.
+ */
+export function hydratePersisted(): void {
+  for (const id of persistedIds()) {
+    const stored = readPersisted(id);
+    if (stored !== undefined) set(id, stored);
+  }
 }
 
 export function reset(): void {
@@ -69,4 +113,6 @@ export function reset(): void {
   }
   resetStateInstance();
   resetOptions();
+  clearRegistry();
 }
+

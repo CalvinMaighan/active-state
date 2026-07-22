@@ -1,9 +1,14 @@
 # dependencies (bun install)
 node_modules
+examples/**/node_modules
+examples/**/bun.lock
 
 # output
 out
 dist
+examples/**/dist
+examples/**/.astro
+examples/astro/public/active-state.min.js
 *.tgz
 
 # code coverage
@@ -32,3 +37,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
