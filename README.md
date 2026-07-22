@@ -1,6 +1,6 @@
 # active-state
 
-Tiny keyed pub/sub store for shared client UI state — React, Next.js, and light static HTML.
+Tiny keyed pub/sub store for shared client UI state — React, Next.js, Astro, HTMX, and light static HTML.
 
 No Providers. Theme-agnostic (bring your own keys).
 
@@ -283,15 +283,17 @@ export default [
 
 - Keyed observables + singleton bus
 - Auto-registering `key()` → `ActiveState.state` (`persist: true` → localStorage)
-- React: `<ActiveState />`, `useActiveState`, `ssr`
-- DOM: path + verb bindings (`each`, `model`, `click`, drag/drop, …)
+- React / Next.js: `<ActiveState />`, `useActiveState`, `ssr`
+- Astro / HTMX / static HTML: same DOM path + verb bindings (see `examples/`)
+- DOM: `each`, `model`, `click`, drag/drop, …
 - CDN build
 - ESLint guardrails for AI-assisted codebases
 
 **Out** (later / other packages)
 
-- Theme engines / expression JS in HTML / component system
-- Persistence, scroll/hover helpers
+- Theme engines / Alpine-style expression JS in HTML / component system
+- First-party Alpine adapter (works alongside today; no dedicated bridge yet)
+- Scroll/hover helpers
 - HTML catalog sync beyond path/command-shape checks
 
 ## Bundle size
@@ -330,4 +332,5 @@ bun run size:brotli   # brotli totals + attribution
 ## License
 
 MIT
+
 
