@@ -298,10 +298,10 @@ export default [
 
 | Import | gzip | brotli | Use when |
 | --- | ---: | ---: | --- |
-| `active-state` | ~1.9KB | ~1.6KB | Vanilla JS/TS — `init` / `get` / `set` / `subscribe` / `key()` |
-| `active-state/dom` | ~3.6KB | ~3.2KB | HTML verbs — `each` / `model` / `click` / drag-drop (+ core) |
+| `active-state` | ~2.3KB | ~2.0KB | Vanilla JS/TS — `init` / `get` / `set` / `subscribe` / `key()` |
+| `active-state/dom` | ~5.1KB | ~4.6KB | HTML verbs — `each` / `model` / `click` / drag-drop (+ core) |
 | `active-state/react` | ~0.7KB | ~0.6KB | Next.js / React — `<ActiveState />` + `useActiveState` (+ core) |
-| CDN IIFE | ~3.9KB | ~3.5KB | core + dom in one browser build |
+| CDN IIFE | ~5.3KB | ~4.8KB | core + dom in one browser build |
 
 Sizes are per entry (gzip level 9 / brotli quality 11). `/react` and `/dom` depend on core (one shared singleton). Importing `ActiveState` from `/react` also pulls `/dom` for `bind`. ESLint (`active-state/eslint`) is opt-in. CDNs typically serve brotli when the browser accepts it.
 
@@ -330,3 +330,4 @@ bun run size:brotli   # brotli totals + attribution
 ## License
 
 MIT
+
