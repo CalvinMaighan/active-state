@@ -10,6 +10,10 @@ const API = new Set([
   "set",
   "subscribe",
   "useActiveState",
+  "useClientState",
+  "useLocalState",
+  "clearPersisted",
+  "clearLocalStateKey",
   "resolveKey",
 ]);
 
@@ -100,3 +104,4 @@ const rule: Rule.RuleModule = {
 };
 
 export default rule;
+

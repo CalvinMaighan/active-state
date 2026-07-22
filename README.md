@@ -35,17 +35,21 @@ export const LAYOUT = key("LAYOUT", { nav: false });
 // client/state/theme.ts
 import { key } from "active-state";
 
-// Survives refresh (localStorage). With <ActiveState ssr />, applies after first paint.
+// Survives refresh (localStorage). With <ActiveState init={state} ssr />, applies after first paint.
 export const THEME = key("THEME", { dark: false }, { persist: true });
 ```
 
 ```ts
 // client/state/index.ts
+import { catalog } from "active-state";
 import { USER } from "./user";
 import { LAYOUT } from "./layout";
+import { THEME } from "./theme";
 
-// Re-export so importing this file registers every key.
-export { USER, LAYOUT };
+export { USER, LAYOUT, THEME };
+
+/** Snapshot for `<ActiveState init={state} />` — importing this runs every `key()`. */
+export const state = catalog(USER, LAYOUT, THEME);
 ```
 
 ```ts
@@ -57,10 +61,9 @@ Keys should be `UPPERCASE_IDS` unless you pass `{ any: true }`.
 
 - `LAYOUT.$` → `"LAYOUT"`
 - `LAYOUT.nav` → `"LAYOUT.nav"`
-- `ActiveState.state` → `{ USER: {…}, LAYOUT: { nav: false } }`
+- `state` / `ActiveState.state` → `{ USER: {…}, LAYOUT: { nav: false }, THEME: {…} }`
 
 Path alias — point at the `client` folder:
-
 
 ```jsonc
 // tsconfig.json
@@ -75,9 +78,7 @@ Path alias — point at the `client` folder:
 ```
 
 ```ts
-import "client"; // register every key (via client → state)
-import { USER, LAYOUT } from "client";
-import { LAYOUT } from "client/state"; // same catalog, deeper path
+import { state, USER, LAYOUT } from "client";
 import { LAYOUT } from "client/state/layout"; // single key module
 ```
 
@@ -85,22 +86,22 @@ Next.js picks up `paths` from `tsconfig.json` automatically.
 
 ## 2. Init once
 
+`<ActiveState init={…} />` is **required**. Import your catalog and pass the snapshot — that import is what runs `key()` (persist marks, registry) and makes the map you hand to boot.
 
-Import your catalog **before** boot so `key()` registrations run, then init from `ActiveState.state` (default).
+Don’t mount `<ActiveState />` from a lazy route that defines keys later — `init` is idempotent and will not pick up keys registered after the first boot.
 
 ### Next.js / React
 
 ```tsx
 // app/layout.tsx
-import "client"; // registers USER, LAYOUT, …
+import { state } from "client/state";
 import { ActiveState } from "active-state/react";
-
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <ActiveState ssr />
+        <ActiveState init={state} ssr />
         {children}
       </body>
     </html>
@@ -110,39 +111,31 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 | Prop | Meaning |
 | --- | --- |
-| `init` | Optional. Defaults to `ActiveState.state` from `key()` calls. |
+| `init` | **Required.** Non-empty map (usually `state` from your catalog). |
 | `ssr` | App Router / static export — safe hydration. |
 | `any` | Allow non-`UPPERCASE_IDS` keys. |
 
-Explicit init still works if you prefer:
+Same-file / one-off apps can pass the live registry:
 
 ```tsx
-import { state } from "client"; // if you export catalog() yourself
-<ActiveState init={state} ssr />
-```
-
-
-Or:
-
-```tsx
-<ActiveState init={ActiveState.state} ssr />
+<ActiveState init={ActiveState.state} />
 ```
 
 Client-only apps can omit `ssr`:
 
 ```tsx
-import "client";
-<ActiveState />
+import { state } from "client/state";
+<ActiveState init={state} />
 ```
 
 ### Without React
 
 ```ts
-import "client";
-import { init, registeredState } from "active-state";
+import { state } from "client/state";
+import { init } from "active-state";
 
-init(registeredState());
-// init(registeredState(), { ssr: true })
+init(state);
+// init(state, { ssr: true })
 ```
 
 ## 3. Use it in React
@@ -271,7 +264,7 @@ export default [
 | `hydratePersisted()` | Re-load persisted keys (usually automatic) |
 | `ActiveState.state` / `registeredState()` | Current registered map |
 | `catalog()` | Same as `registeredState()`; `catalog(A, B)` builds a custom map |
-| `init(state?, opts?)` / `<ActiveState ssr />` | Create the store (idempotent) |
+| `init(state, opts?)` / `<ActiveState init={state} ssr />` | Create the store (idempotent; `init` map required) |
 | `get` / `set` / `subscribe` | Accept string or `key()` slice |
 | `bind()` | Wire path + verb attrs (`text`, `model`, `click`, `each`, drag/drop, …) |
 | `reset()` | Clear store **and** key registry (tests / hot reload) |
@@ -283,7 +276,7 @@ export default [
 
 - Keyed observables + singleton bus
 - Auto-registering `key()` → `ActiveState.state` (`persist: true` → localStorage)
-- React / Next.js: `<ActiveState />`, `useActiveState`, `ssr`
+- React / Next.js: `<ActiveState init={state} />`, `useActiveState`, `ssr`
 - Astro / HTMX / static HTML: same DOM path + verb bindings (see `examples/`)
 - DOM: `each`, `model`, `click`, drag/drop, …
 - CDN build
@@ -302,7 +295,7 @@ export default [
 | --- | ---: | ---: | --- |
 | `active-state` | ~2.3KB | ~2.0KB | Vanilla JS/TS — `init` / `get` / `set` / `subscribe` / `key()` |
 | `active-state/dom` | ~5.1KB | ~4.6KB | HTML verbs — `each` / `model` / `click` / drag-drop (+ core) |
-| `active-state/react` | ~0.7KB | ~0.6KB | Next.js / React — `<ActiveState />` + `useActiveState` (+ core) |
+| `active-state/react` | ~0.7KB | ~0.6KB | Next.js / React — `<ActiveState init={state} />` + `useActiveState` (+ core) |
 | CDN IIFE | ~5.3KB | ~4.8KB | core + dom in one browser build |
 
 Sizes are per entry (gzip level 9 / brotli quality 11). `/react` and `/dom` depend on core (one shared singleton). Importing `ActiveState` from `/react` also pulls `/dom` for `bind`. ESLint (`active-state/eslint`) is opt-in. CDNs typically serve brotli when the browser accepts it.
@@ -332,5 +325,6 @@ bun run size:brotli   # brotli totals + attribution
 ## License
 
 MIT
+
 
 

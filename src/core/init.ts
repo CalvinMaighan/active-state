@@ -1,12 +1,15 @@
-import { createEventBus } from "./create-event-bus";
+import { createEventBus, type EventBus } from "./create-event-bus";
 import { createObservable } from "./create-observable";
 import { getStateInstance } from "./get-state-instance";
 import { assertUppercaseId } from "./key-format";
 import { setEnforceKeys, setServerSnapshot, setSsr } from "./options";
 import {
   applyPersistedToState,
+  isPersisted,
   persistedIds,
   readPersisted,
+  startStorageSync,
+  writePersisted,
 } from "./persist";
 
 export type InitOptions = {
@@ -19,6 +22,15 @@ export type InitOptions = {
    */
   ssr?: boolean;
 };
+
+/** Persist on every bus write (set, update, helpers) for `persist: true` keys. */
+function installPersistBridge(bus: EventBus): void {
+  const baseUpdate = bus.update.bind(bus);
+  bus.update = (id, value) => {
+    baseUpdate(id, value);
+    if (isPersisted(id)) writePersisted(id, value);
+  };
+}
 
 export function init(
   initialState: Record<string, unknown>,
@@ -57,7 +69,12 @@ export function init(
       }
     },
   });
+  installPersistBridge(bus);
   getStateInstance(bus);
+
+  startStorageSync((id, value) => {
+    bus.update(id, value);
+  });
 
   // Next / SSR: apply localStorage after first client paint.
   if (enableSsr && typeof globalThis.window !== "undefined") {

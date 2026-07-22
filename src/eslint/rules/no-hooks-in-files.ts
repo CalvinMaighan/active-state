@@ -5,8 +5,9 @@ const HOOK = /^use[A-Z]/;
 const MSG =
   "[active-state] React hooks are not allowed in this file (public/static surface). " +
   'Keep it a Server Component, or move interactivity into a small "use client" island outside this lint path. ' +
-  "Shared UI state: define key() in a catalog, import the catalog in the root layout, mount <ActiveState ssr />, " +
-  "then call useActiveState(KEY) / ActiveState.set(KEY, …) only inside that client island.";
+  "Shared UI state: define key() in a catalog, import { state } from that catalog, " +
+  "mount <ActiveState init={state} ssr />, then call useActiveState(KEY) / ActiveState.set(KEY, …) " +
+  "only inside that client island.";
 
 function isHookName(name: string | null | undefined): boolean {
   return typeof name === "string" && HOOK.test(name);
@@ -57,3 +58,4 @@ const rule: Rule.RuleModule = {
 };
 
 export default rule;
+

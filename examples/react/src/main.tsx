@@ -273,7 +273,8 @@ function App() {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ActiveState />
+    <ActiveState init={ActiveState.state} />
     <App />
   </StrictMode>,
 );
+

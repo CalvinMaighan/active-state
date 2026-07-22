@@ -25,9 +25,10 @@ Shared only: [`shared/serve-static.ts`](./shared/serve-static.ts) (tiny Bun stat
 
 | Stack | Why skipped (for now) |
 | --- | --- |
-| **Next.js** | Same as React + `<ActiveState ssr />` |
+| **Next.js** | Same as React + `<ActiveState init={state} ssr />` |
 | **Vue / Svelte / Solid** | No first-party adapter — use core |
 | **Alpine** | Works alongside; bridge only if demand appears |
 | **Preact** | Use React entry or core |
 
 PRs welcome for thin demos of the above if they stay small.
+

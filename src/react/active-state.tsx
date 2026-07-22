@@ -1,5 +1,6 @@
 import {
   catalog,
+  clearPersisted,
   get,
   init as initState,
   key,
@@ -16,10 +17,10 @@ export type ActiveStateInit = Record<string, unknown>;
 
 type ActiveStateProps = {
   /**
-   * Initial store map. Optional if you've already called `key()` in imported
-   * modules — defaults to `ActiveState.state`.
+   * Initial store map — required. Pass your catalog snapshot, e.g.
+   * `import { state } from "client/state"` then `<ActiveState init={state} />`.
    */
-  init?: ActiveStateInit;
+  init: ActiveStateInit;
   /** Allow any key format. Default false (UPPERCASE_IDS required). */
   any?: boolean;
   /**
@@ -34,15 +35,15 @@ function ActiveStateRoot({
   any = false,
   ssr = false,
 }: ActiveStateProps): null {
-  const payload = init ?? registeredState();
-  if (Object.keys(payload).length === 0) {
+  if (init == null || Object.keys(init).length === 0) {
     throw new Error(
-      "[active-state] No state to init. Import your key() modules first, or pass init={...}.",
+      "[active-state] <ActiveState init={…} /> requires a non-empty map. " +
+        'Import your catalog (e.g. import { state } from "client/state") and pass init={state}.',
     );
   }
   // initState is idempotent — safe under Strict Mode / re-renders
   const options: InitOptions = { any, ssr };
-  initState(payload, options);
+  initState(init, options);
   return null;
 }
 
@@ -53,6 +54,7 @@ export const ActiveState = Object.assign(ActiveStateRoot, {
   set,
   subscribe,
   reset,
+  clearPersisted,
   bind,
   key,
   catalog,
@@ -63,6 +65,7 @@ export const ActiveState = Object.assign(ActiveStateRoot, {
   set: typeof set;
   subscribe: typeof subscribe;
   reset: typeof reset;
+  clearPersisted: typeof clearPersisted;
   bind: typeof bind;
   key: typeof key;
   catalog: typeof catalog;

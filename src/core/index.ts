@@ -30,17 +30,20 @@ export {
 export { getServerSnapshot, getSsr } from "./options";
 export {
   isPersisted,
+  isShared,
   persistedIds,
   readPersisted,
+  STORAGE_PREFIX,
+  storageKey,
 } from "./persist";
 export { uuid } from "./uuid";
 
 import { clearRegistry, resolveKey, type AnyKey } from "./key";
 import {
-  isPersisted,
   persistedIds,
   readPersisted,
-  writePersisted,
+  removePersisted,
+  stopStorageSync,
 } from "./persist";
 
 function assertKey(key: string): void {
@@ -69,8 +72,8 @@ export function set<T = unknown>(
     typeof value === "function"
       ? (value as (p: T | undefined) => T)(prev)
       : value;
+  // Persist runs inside the bus.update bridge for persist: true keys.
   bus.update(id, next);
-  if (isPersisted(id)) writePersisted(id, next);
 }
 
 export function subscribe(
@@ -102,7 +105,21 @@ export function hydratePersisted(): void {
   }
 }
 
+/**
+ * Remove `persist: true` entries from localStorage (`active-state:KEY`).
+ * Omit `key` to clear every persisted id. Does not change in-memory bus values.
+ */
+export function clearPersisted(key?: AnyKey | AnyKey[]): void {
+  if (key === undefined) {
+    removePersisted();
+    return;
+  }
+  const ids = (Array.isArray(key) ? key : [key]).map(resolveKey);
+  removePersisted(ids);
+}
+
 export function reset(): void {
+  stopStorageSync();
   try {
     const bus = getStateInstance();
     for (const key of bus.keys()) {
@@ -115,4 +132,3 @@ export function reset(): void {
   resetOptions();
   clearRegistry();
 }
-
